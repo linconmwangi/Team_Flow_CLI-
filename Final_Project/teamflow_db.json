@@ -3,7 +3,22 @@
         "linchie": {
             "username": "linchie",
             "role": "Junior Dev"
+        },
+        "4": {
+            "username": "4",
+            "role": "Dev"
+        },
+        "lionel messi": {
+            "username": "lionel messi",
+            "role": "Lead Developer"
         }
     },
-    "projects": {}
+    "projects": {
+        "winning games": {
+            "id": "winning games",
+            "name": "World Cup",
+            "assigned_user": "lionel messi",
+            "tasks": []
+        }
+    }
 }

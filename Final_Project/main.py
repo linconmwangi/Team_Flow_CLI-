@@ -6,10 +6,12 @@ from storage import TeamFlowStorage  # Importing our file engine from storage.py
 db = TeamFlowStorage()
 
 # INTERACTIVE CLI MENU LOOPS
+
 def main_menu():
     while True:
-       
+        print("\n==============================")
         print("    TEAMFLOW CLI APP COMMANDS ")
+        print("==============================")
         print("1. User Management Menu")
         print("2. Project Management Menu")
         print("3. Task Management Menu")
@@ -24,17 +26,18 @@ def main_menu():
         elif choice == "3":
             task_menu()
         elif choice == "4":
-            print("\n Progress saved to local file. Thank you!")
+            print("\nProgress saved to local file. Goodbye!")
             break
         else:
-            print(" Invalid entry! Please type a number between 1 and 4.")
+            print("Invalid entry! Please type a number between 1 and 4.")
 
 # --- USER MANAGEMENT ---
 def user_menu():
     print("\n--- USER MANAGEMENT ---")
     print("1. Register New Team Member")
     print("2. List All Active Team Members")
-    choice = input("Select operation (1-2): ").strip()
+    print("3. Delete a Team Member")
+    choice = input("Select operation (1-3): ").strip()
 
     if choice == "1":
         username = input("Enter unique username: ").strip().lower()
@@ -44,7 +47,7 @@ def user_menu():
         if username in db.users:
             print("Error: That user already exists.")
             return
-        role = input("Enter team role (e.g. Chef, Developer): ").strip()
+        role = input("Enter team role (e.g. Lead Developer, Junior Developer): ").strip()
         
         from models import User  # import to create the user object safely
         db.users[username] = User(username, role if role else "Developer")
@@ -53,22 +56,34 @@ def user_menu():
 
     elif choice == "2":
         if not db.users:
-            print(" No team members registered yet.")
+            print("No team members registered yet.")
             return
         table_rows = [[u.username, u.role] for u in db.users.values()]
         print("\n" + tabulate(table_rows, headers=["Username", "Corporate Role"], tablefmt="grid"))
 
+    elif choice == "3":
+        username = input("Enter username to remove: ").strip().lower()
+        if username not in db.users:
+            print("Error: That user does not exist.")
+            return
+        
+        # Remove user from active dictionary mapping
+        db.users.pop(username)
+        db.save_to_json() # Persist change to database file
+        print(f"Success: User '{username}' removed cleanly from the team database!")
+
 # --- PROJECT MANAGEMENT ---
 def project_menu():
-    print("\n--- PROJECT MANAGEMENT  ---")
+    print("\n--- PROJECT MANAGEMENT ---")
     print("1. Create New Project Assignment")
     print("2. List All Running Projects")
-    choice = input("Select operation (1-2): ").strip()
+    print("3. Delete an Existing Project")
+    choice = input("Select operation (1-3): ").strip()
 
     if choice == "1":
         user = input("Assign to which username?: ").strip().lower()
         if user not in db.users:
-            print(" Error: User profile not found in system.")
+            print("Error: User profile not found in system.")
             return
         pid = input("Enter unique Project ID (e.g. p1): ").strip().lower()
         if pid in db.projects:
@@ -79,14 +94,25 @@ def project_menu():
         from models import Project
         db.projects[pid] = Project(pid, name, user)
         db.save_to_json()
-        print(f" Success: Project '{name}' assigned to user '{user}'!")
+        print(f"Success: Project '{name}' assigned to user '{user}'!")
 
     elif choice == "2":
         if not db.projects:
-            print(" No projects active right now.")
+            print("No projects active right now.")
             return
         table_rows = [[p.id, p.name, p.assigned_user, len(p.tasks)] for p in db.projects.values()]
         print("\n" + tabulate(table_rows, headers=["Project ID", "Name", "Assigned Owner", "Total Tasks"], tablefmt="grid"))
+
+    elif choice == "3":
+        pid = input("Enter Project ID to delete: ").strip().lower()
+        if pid not in db.projects:
+            print("Error: That Project ID does not exist.")
+            return
+        
+        # Remove the target project object
+        db.projects.pop(pid)
+        db.save_to_json()
+        print(f"Success: Project '{pid}' permanently removed from the system!")
 
 # --- TASK MANAGEMENT ---
 def task_menu():
@@ -94,7 +120,8 @@ def task_menu():
     print("1. Add New Task to a Project")
     print("2. Mark an Existing Task as Complete")
     print("3. View Detailed Project Status (With Tasks)")
-    choice = input("Select operation (1-3): ").strip()
+    print("4. Delete a Task from a Project")
+    choice = input("Select operation (1-4): ").strip()
 
     if choice == "1":
         pid = input("Enter Target Project ID: ").strip().lower()
@@ -146,6 +173,29 @@ def task_menu():
             
         table_rows = [[t["title"], t["status"]] for t in project.tasks]
         print("\n" + tabulate(table_rows, headers=["Work Task Title", "Progress Status"], tablefmt="grid"))
+
+    elif choice == "4":
+        pid = input("Enter Project ID containing the task: ").strip().lower()
+        if pid not in db.projects:
+            print("Error: Project ID not found.")
+            return
+        project = db.projects[pid]
+        if not project.tasks:
+            print("This project has zero tasks to delete.")
+            return
+
+        print("\n--- Current Tasks ---")
+        for idx, task in enumerate(project.tasks):
+            print(f"[{idx}] {task['title']} - {task['status']}")
+
+        try:
+            task_idx = int(input("\nSelect Task Index Number to delete: ").strip())
+            # Use pop() to remove the element out of the tracking list array
+            project.tasks.pop(task_idx)
+            db.save_to_json() # Save updates safely
+            print("Success: Task item completely purged from project timeline!")
+        except (ValueError, IndexError):
+            print("Error: That selection index does not exist.")
 
 if __name__ == "__main__":
     main_menu()
