@@ -6,7 +6,6 @@ from storage import TeamFlowStorage  # Importing our file engine from storage.py
 db = TeamFlowStorage()
 
 # INTERACTIVE CLI MENU LOOPS
-
 def main_menu():
     while True:
        
@@ -25,7 +24,7 @@ def main_menu():
         elif choice == "3":
             task_menu()
         elif choice == "4":
-            print("\n Progress saved to local file. Goodbye!")
+            print("\n Progress saved to local file. Thank you!")
             break
         else:
             print(" Invalid entry! Please type a number between 1 and 4.")
@@ -45,7 +44,7 @@ def user_menu():
         if username in db.users:
             print("Error: That user already exists.")
             return
-        role = input("Enter team role (e.g. Lead, Developer): ").strip()
+        role = input("Enter team role (e.g. Chef, Developer): ").strip()
         
         from models import User  # import to create the user object safely
         db.users[username] = User(username, role if role else "Developer")
@@ -61,7 +60,7 @@ def user_menu():
 
 # --- PROJECT MANAGEMENT ---
 def project_menu():
-    print("\n--- PROJECT MANAGEMENT ---")
+    print("\n--- PROJECT MANAGEMENT  ---")
     print("1. Create New Project Assignment")
     print("2. List All Running Projects")
     choice = input("Select operation (1-2): ").strip()
@@ -107,7 +106,7 @@ def task_menu():
             print("Error: Title can't be empty.")
             return
             
-        task_data = {"title": title, "status": "⏳ Pending"}
+        task_data = {"title": title, "status": "Pending"}
         db.projects[pid].tasks.append(task_data)
         db.save_to_json()
         print(f"Success: Task added into project layout workflow!")
